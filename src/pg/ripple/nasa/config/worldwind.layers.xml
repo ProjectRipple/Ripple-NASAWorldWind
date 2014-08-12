@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2012 United States Government as represented by the Administrator of the
+  ~ National Aeronautics and Space Administration.
+  ~ All Rights Reserved.
+  -->
+
+<!--$Id: worldwind.layers.xml 1382 2013-05-31 00:37:46Z tgaskins $-->
+<!--This document specifies the initial layers to load in World Wind-->
+<!--This list can be overridden by specifying an alternate list in worldwind.xml, or by specifying an-->
+<!--alternate configuration document-->
+<!--See the javadoc for the Configuration class for details-->
+<LayerList>    
+    <!-- General maps (satelite view) -->
+    <Layer href="pg/ripple/nasa/config/Earth/BMNGWMSLayer2.xml" actuate="onLoad"/>
+    <Layer href="pg/ripple/nasa/config/Earth/LandsatI3WMSLayer2.xml" actuate="onRequest"/>
+    <Layer href="pg/ripple/nasa/config/Earth/USDANAIPWMSImageLayer.xml" actuate="onRequest"/>
+    <Layer href="pg/ripple/nasa/config/Earth/MSVirtualEarthAerialLayer.xml" actuate="onRequest"/>
+    <Layer href="pg/ripple/nasa/config/Earth/BingImagery.xml" actuate="onLoad"/>
+    
+    <!-- General maps (topography view) -->
+    <Layer href="pg/ripple/nasa/config/Earth/USGSTopoLowResLayer.xml" actuate="onRequest"/>
+    <Layer href="pg/ripple/nasa/config/Earth/USGSTopoMedResLayer.xml" actuate="onRequest"/>
+    <Layer href="pg/ripple/nasa/config/Earth/USGSTopoHighResLayer.xml" actuate="onRequest"/>
+    <Layer href="pg/ripple/nasa/config/Earth/OpenStreetMap.xml" actuate="onRequest"/>
+    <Layer href="pg/ripple/nasa/config/Earth/AlaskaFAASectionals.xml" actuate="onRequest"/>
+    <Layer href="pg/ripple/nasa/config/Earth/MSVirtualEarthRoadsLayer.xml" actuate="onRequest"/>
+    
+    <!-- General maps (mixed views) -->
+    <Layer href="pg/ripple/nasa/config/Earth/MSVirtualEarthHybridLayer.xml" actuate="onRequest"/>
+    
+    <!-- Maps utils -->
+    <Layer className="gov.nasa.worldwind.layers.Earth.CountryBoundariesLayer" actuate="onRequest"/>
+    <Layer className="gov.nasa.worldwind.layers.Earth.NASAWFSPlaceNameLayer" actuate="onRequest"/>
+    <Layer className="gov.nasa.worldwind.layers.WorldMapLayer" actuate="onLoad"/>
+    <Layer className="gov.nasa.worldwind.layers.ScalebarLayer" actuate="onLoad"/>
+    <Layer className="gov.nasa.worldwind.layers.CompassLayer" actuate="onLoad"/>
+    <Layer className="gov.nasa.worldwind.layers.CrosshairLayer" actuate="onRequest"/>
+    <Layer className="gov.nasa.worldwind.layers.LatLonGraticuleLayer" actuate="onRequest"/>
+   
+    
+</LayerList>

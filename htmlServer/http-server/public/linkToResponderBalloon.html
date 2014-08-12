@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<script type="text/javascript">
+		/* This script opens the responder balloon. The responder balloon website is called
+			with id parameter (id that identifies unique cloudlet). id is used by WebSocket,
+			to filter out cloudlet broadcast messages sent by NASA World Wind application. */
+		var id = "";
+		var url = "http://127.0.0.1:8888/responderBalloon.html";
+		url = url.concat("?id=" + id + "&");
+		window.location = url;
+	</script>
+</body>
+<html>

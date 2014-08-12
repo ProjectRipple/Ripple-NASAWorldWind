@@ -1,0 +1,21 @@
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+</head>
+<body>
+	<script type="text/javascript">
+		/* This script opens the patient balloon. The patient balloon website is called 
+		   with id, lat, and _long parameters. id is used by WebSocket, to filter out 
+		   patient messages broadcasted by NASA World Wind. lat, and _long are used
+		   to display patient's location on Google Maps */
+		var id = "";	
+		var lat = "";	
+		var _long = "";	
+		var url = "http://127.0.0.1:8888/patientBalloon.html";
+		url = url.concat("?id=" + id + "&");
+		url = url.concat("lat=" + lat + "&");
+		url = url.concat("long=" + _long + "&");
+		window.location = url;
+	</script>
+</body>
+<html>

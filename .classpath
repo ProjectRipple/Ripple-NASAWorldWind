@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/worldwind-2.0.0"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-ajp-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-annotations-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-client-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-continuation-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-deploy-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-http-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-io-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-jmx-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-jndi-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-overlay-deployer-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-plus-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-policy-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-rewrite-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-security-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-server-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-servlet-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-servlets-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-util-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-webapp-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-websocket-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/jetty-xml-7.6.15.v20140411.jar"/>
+	<classpathentry kind="lib" path="libs/jettyLibs/servlet-api-2.5.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/gdal.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/gluegen-rt-natives-linux-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/gluegen-rt-natives-linux-i586.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/gluegen-rt-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/gluegen-rt-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/gluegen-rt-natives-windows-i586.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/jogl-all-natives-linux-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/jogl-all-natives-linux-i586.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/jogl-all-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/jogl-all-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/jogl-all-natives-windows-i586.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/jogl-all.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/plugin.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/worldwind.jar"/>
+	<classpathentry kind="lib" path="libs/WorldWindLibs/worldwindx.jar"/>
+	<classpathentry kind="lib" path="libs/Base64DecoderLibs/commons-codec-1.9.jar"/>
+	<classpathentry kind="lib" path="libs/ZeroMQLibs/jeromq-0.3.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="libs/SwingGraphLibs/jcommon-1.0.23.jar"/>
+	<classpathentry kind="lib" path="libs/SwingGraphLibs/jfreechart-1.0.19.jar"/>
+	<classpathentry kind="lib" path="libs/RippleCloudLibs/Ripple_DS_Observer.jar"/>
+	<classpathentry kind="lib" path="libs/RippleCloudLibs/Ripple_DS_Subscriber.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

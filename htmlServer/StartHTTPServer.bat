@@ -1,0 +1,1 @@
+node http-server/bin/http-server http-server/public -p 8888

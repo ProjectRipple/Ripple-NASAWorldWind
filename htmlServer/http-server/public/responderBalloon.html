@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=10">
+		<meta http-equiv="Pragma" content="no-cache">
+		<meta http-equiv="Expires" content="-1">
+		<title>First Responder page</title>
+	</head>
+
+<link rel="stylesheet" type="text/css" href="responderBalloon.css">
+
+<script>
+	var patientOnTheScreen_ID = '';
+
+	var tmp = 0;
+	var tmp1 = setInterval(function(){sendPatientInfoRequest(patientOnTheScreen_ID)},1000);
+	/*var tmp2 = setInterval(function(){sendPatientListRequest()}, 1500);*/
+
+	function sendPatientInfoRequest(patientID) {
+		if (tmp == 0) {
+			if (patientID === '') {
+				return;
+			}
+			ws.send(id + "-" + patientID);
+			tmp = 1;
+		}
+		else {
+			ws.send(id + "-" + "patientList");
+			tmp = 0;
+		}
+	}
+
+	function sendPatientListRequest() {
+		ws.send(id + "-" + "patientList");
+	}
+
+	function getArgValue(name) {
+		name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+		var regexS = "[\\?&]"+name+"=([^&#]*)";
+		var regex = new RegExp( regexS );
+		var results = regex.exec( window.location.href );
+		 if( results == null )
+		  	return null;
+		 else
+		   	return results[1];
+	}	
+
+	var id = ""; 
+
+	function processURLArgs() {
+			id = getArgValue("id");
+	}
+
+	var ws;
+
+	function startHTTPClient() {
+		/* read in arguments from the URL */
+		processURLArgs();
+
+		/* creates and start the WebSocket */
+		try {
+			ws = new WebSocket("ws://127.0.0.1:8081/");
+		} catch (err) {
+			alert(err);
+		}
+
+		ws.onopen = function() {
+			
+		};
+
+		ws.onmessage = function(evt) {
+			/* first, check if the message is an ordinary ping message (to keep the
+			   connection between this WebSocket, and the server alive) */
+			if (evt.data.substring(0,4) == "ping") {
+				ws.send("pong");
+				return;
+			}
+
+			if (evt.data.substring(0,11) == "patientList") {
+				var patientListMsg = evt.data.substring(11,evt.data.length).split(' ');
+				var patientID = "";
+				var patientStatus = "";
+				var patientWoundStateColor = "";
+				for (i = 0; i < patientListMsg.length; ) {
+					patientID = patientListMsg[i++];
+					patientStatus = patientListMsg[i++];
+					patientWoundStateColor = patientListMsg[i++];
+					changePatientButtonColor(patientID.concat("B"), patientWoundStateColor);
+					changePatientStatusTop(patientID.concat("B"), patientID, patientStatus);
+				}
+				return;
+			}
+
+			/* "patientData" contains all data about the patient that can be displayed
+			    in the responder balloon */
+			if (evt.data.substring(0,11) == "patientData") {
+				var patientMsg = evt.data.substring(11,evt.data.length).split(' ');
+				var patientID;
+				if (patientMsg[0] === 'ID') {
+					patientID = patientMsg[1];
+				} else {
+					return;
+				}
+				removeAllNotes();
+				var notesAdded = false;
+				for (i = 2; i < patientMsg.length; i++) {
+					switch(patientMsg[i]) {
+						case "NAME":
+							changePatientName(patientMsg[++i]);
+							break;
+						case "AGE":
+							changePatientAge(patientMsg[++i]);
+							break;
+						case "NBC":
+							changePatientNBC(patientMsg[++i]);
+							break;
+						case "SEX":
+							changePatientSex(patientMsg[++i]);
+							break;
+						case "WOUNDSTATE":
+							var triageColor = patientMsg[++i];
+							changePatientWoundState(triageColor);
+							changePatientButtonColor(patientID.concat("B"), triageColor);
+							break;
+						case "STATUS":
+							var patientStatus = patientMsg[++i];
+							changePatientStatus(patientStatus);
+							changePatientStatusTop(patientID.concat("B"), patientID, patientStatus);
+							break;
+						case "TEMPERATURE":
+							changePatientTemperature(patientMsg[++i]);
+							break;
+						case "SPO2":
+							changePatientSpO2(patientMsg[++i]);
+							break;
+						case "HEARTRATE":
+							changePatientHeartRate(patientMsg[++i]);
+							break;
+						case "BLOODPR_DIA":
+							changePatientBloodPressureDIA(patientMsg[++i]);
+							break;
+						case "BLOODPR_SYS":
+							changePatientBloodPressureSYS(patientMsg[++i]);
+							break;
+						case "RESPIRATION":
+							changePatientRespirationRate(patientMsg[++i]);
+							break;
+						case "PAIN":
+							changePatientPainLevel(patientMsg[++i]);
+							break;
+						case "NOTE":
+							notesAdded = true;
+							addPatientNote(patientMsg[++i], patientMsg[++i], patientMsg[++i], patientMsg[++i]);
+							break; 
+						default:
+							i++;
+							break;
+					}
+				}
+				if (!notesAdded) {
+					setNotesToNA();
+				}
+				return;
+			}
+
+			/* create an XML parser */
+			xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+			/* TODO: implement async XML processing */
+			xmlDoc.async = false;
+			/* load XML file into parser */
+			xmlDoc.loadXML(evt.data);
+
+			/* get cloudlet id, if there is no match between the id in the message and 
+			   id passed in the URL disregard the message */
+			producerId = xmlDoc.getElementsByTagName("id")[0].childNodes[0].nodeValue;
+			producerType = xmlDoc.getElementsByTagName("producer")[0].attributes.getNamedItem("type").nodeValue;
+			if (producerId == id && producerType == "Cloudlet") {
+				/* process message from cloudlet */
+				itemList = xmlDoc.getElementsByTagName("Item");
+				for (i = 0; i < itemList.length; i++) {
+					attribute = itemList[i].attributes.getNamedItem("type").nodeValue;
+					/* check if message contains patient list */
+					if (attribute == "patientList") {
+						/* get all patient ids referenced in XML message */
+						var patientIDs = itemList[i].getElementsByTagName("value");
+						/* get all patient ids that are currently displayed */
+						var currentPatientList = document.getElementById("list").getElementsByTagName("li");
+						var wasFound = false;
+						for (j = 0; j < patientIDs.length; j++) {
+							/* extract actuall patient id from the XML */
+							pid = patientIDs[j].childNodes[0].nodeValue;
+							if (currentPatientList.length > 0) {
+								for (k = 0; k < currentPatientList.length; k++) {
+									/* compare patient id from the XML message with all the patient ids that 
+									   are currently displayed. Set the flag, if a match was found */
+									if (pid == currentPatientList[k].getAttribute("id")) {
+										wasFound = true;
+									}
+								}
+							}
+							if (wasFound == false) {
+								/* if no id was found, append the top bar of the balloon */
+								newLi(pid, pid.concat("B"), 'gray', pid, 'N/A');
+							}
+							wasFound = false;
+						}
+					}
+				}
+			}
+		};
+
+		ws.onclose = function() {
+			alert("Socket closed");
+			ws = new WebSocket("ws://127.0.0.1:8081/");
+		};
+
+		ws.onerror = function(err) {
+			alert("Socket errored");
+		};
+	}
+</script>
+
+<script>
+		function addPatient() {
+			list.innerHtml += "<li>bla</li>";
+		}
+
+		/* Adds new button to the patient list shown on top of the web page 
+		   idName - id of the button, use this id to remove the button if needed,
+		            must be unique (globally)
+		   idBtn - used internally, must be different the idName, and unqiue (globally)
+		   color - "red", "green", or "orange", should the same as wound state
+		   patientId - patient ID that will be shown on the button
+		   patientStatus - patient status that will be shown on the button */
+		function newLi(idName, idBtn, color, patientId, patientStatus)
+		{
+			
+			var node=document.createElement("LI");
+			node.setAttribute("id", idName);
+			document.getElementById("list").appendChild(node);
+				
+			newBtn(idName, idBtn, color, patientId, patientStatus);			
+		}
+
+		/* helper function, called from newLi() */
+		function newBtn(idName, idBtn, color, patientId, patientStatus)
+		{
+			var btn=document.createElement("BUTTON");
+			if (color === 'green') {
+				btn.className = "patientButtonGreen";
+			}
+			else if (color === 'orange') {
+				btn.className = "patientButtonOrange";
+			}
+			else if (color === 'red') {
+				btn.className = "patientButtonRed";
+			}
+			else if (color === 'gray') {
+				btn.className = "patientButtonGray";
+			}
+			else {
+				btn.className = "patientButtonDefault"; 
+			}
+			btn.setAttribute("id", idBtn);
+			btn.addEventListener("click", function() { 
+				ws.send(id + "-" + patientId);
+				patientOnTheScreen_ID = patientId;
+			});
+
+			document.getElementById(idName).appendChild(btn);
+
+			var writing = "Patient<br>" + patientId + "<br> Status <br>" + patientStatus;
+			document.getElementById(idBtn).innerHTML = writing;
+		}
+
+		/* Removes patient button from the top of the web page */
+		function removeThis(id)
+		{
+			var elem = document.getElementById(id);
+			elem.parentNode.removeChild(elem);
+
+		}
+
+		function changePatientStatusTop(buttonID, patientID, status) {
+			var formattedStatus = "N/A";
+			if (status.toUpperCase() === 'ATTENDED_ME') {
+				formattedStatus = 'Attended me';
+			} else if (status.toUpperCase() === 'ATTENDED_TEAM') {
+				formattedStatus = 'Attended team';
+			} else if (status.toUpperCase() === 'ATTENDED_OTHER') {
+				formattedStatus = 'Attended other';
+			} else if (status.toUpperCase() === 'TRANSPORT_TEAM') {
+				formattedStatus = 'Transport team';
+			} else if (status.toUpperCase() === 'TRANSPORT_OTHER') {
+				formattedStatus = 'Transport other';
+			} else if (status.toUpperCase() === 'NOT_ATTENDED') {
+				formattedStatus = 'Not attended';
+			}
+			var writing = "Patient<br>" + patientID + "<br> Status <br>" + formattedStatus;
+			document.getElementById(buttonID).innerHTML = writing;
+		}
+
+		/* Changes patient's name displayed in the patient information section 
+		   of the balloon. */
+		function changePatientName(name) {
+			document.getElementById("patientName").innerHTML = name;
+		}
+
+		/* Changes patient's age displayed in the patient information section 
+		   of the balloon. */
+		function changePatientAge(age) {
+			document.getElementById("patientAge").innerHTML = age;
+		}
+
+		/* Changes patient's NBC Status displayed in the patient information section 
+		   of the balloon. */
+		function changePatientNBC(nbc) {
+			document.getElementById("patientNBC").innerHTML = nbc;
+		}
+
+		/* Changes patient's sex displayed in the patient information section 
+		   of the balloon. */
+		function changePatientSex(sex) {
+			document.getElementById("patientSex").innerHTML = sex;
+		}
+
+		/* Changes patient's wound status displayed in the patient information section 
+		   of the balloon. 
+		   woundStateColor - recommended "red", "green, or "orange */
+		function changePatientWoundState(woundStateColor) {
+			if (woundStateColor.toUpperCase() === "YELLOW") {
+				document.getElementById("patientWoundStateDiv").style.backgroundColor = '#FFD700';
+				return;
+			}
+			document.getElementById("patientWoundStateDiv").style.backgroundColor = woundStateColor;
+		}
+
+		/* Changes patient's status displayed in the patient information section 
+		   of the balloon. */
+		function changePatientStatus(status) {
+			var formattedStatus = "N/A";
+			if (status.toUpperCase() === 'ATTENDED_ME') {
+				formattedStatus = 'Attended me';
+			} else if (status.toUpperCase() === 'ATTENDED_TEAM') {
+				formattedStatus = 'Attended team';
+			} else if (status.toUpperCase() === 'ATTENDED_OTHER') {
+				formattedStatus = 'Attended other';
+			} else if (status.toUpperCase() === 'TRANSPORT_TEAM') {
+				formattedStatus = 'Transport team';
+			} else if (status.toUpperCase() === 'TRANSPORT_OTHER') {
+				formattedStatus = 'Transport other';
+			} else if (status.toUpperCase() === 'NOT_ATTENDED') {
+				formattedStatus = 'Not attended';
+			}
+			document.getElementById("patientStatus").innerHTML = formattedStatus;
+		}
+
+		/* Changes patient's temperature displayed in the patient information section 
+		   of the balloon. */
+		function changePatientTemperature(temperature) {
+			document.getElementById("patientTemperature").innerHTML = temperature;
+		}
+
+		/* Changes patient's saturation displayed in the patient information section 
+		   of the balloon. */
+		function changePatientSpO2(spO2) {
+			document.getElementById("patientSpO2").innerHTML = spO2;
+		}
+
+		/* Changes patient's heart rate displayed in the patient information section 
+		   of the balloon. */
+		function changePatientHeartRate(heartRate) {
+			document.getElementById("patientHeartRate").innerHTML = heartRate;
+		}
+
+		/* Changes patient's blood pressure displayed in the patient information section 
+		   of the balloon. (SYS value) */
+		function changePatientBloodPressureSYS(sys) {
+			document.getElementById("patientBloodPressureSYS").innerHTML = sys;
+		}
+
+		/* Changes patient's blood pressure displayed in the patient information section 
+		   of the balloon. (DIA value) */
+		function changePatientBloodPressureDIA(dia) {
+			document.getElementById("patientBloodPressureDIA").innerHTML = dia;
+		}
+
+		/* Changes patient's respiration rate displayed in the patient information section 
+		   of the balloon. */
+		function changePatientRespirationRate(respirationRate) {
+			document.getElementById("patientRespirationRate").innerHTML = respirationRate;
+		}
+
+		function changePatientPainLevel(painLevel) {
+			document.getElementById("patientPainLevel").innerHTML = painLevel;
+		}
+
+		function changePatientButtonColor(buttonID, color) {
+			var button = document.getElementById(buttonID);
+			if (color.toUpperCase() === 'GREEN') {
+				button.className = "patientButtonGreen";
+			}
+			else if (color.toUpperCase() === 'YELLOW') {
+				button.className = "patientButtonOrange";
+			}
+			else if (color.toUpperCase() === 'RED') {
+				button.className = "patientButtonRed";
+			}
+			else if (color.toUpperCase() === 'GRAY' || color.toUpperCase() === 'WHITE' || color.toUpperCase() === 'UNKNOWN') {
+				button.className = "patientButtonGray";
+			}
+			else if (color.toUpperCase() === 'BLACK') {
+				button.className = "patientButtonBlack";
+			}
+			else {
+				button.className = "patientButtonDefault"; 
+			}
+		}
+
+		function addPatientNote(responderID, noteType, noteLocation, note) {
+			/* add separtor */
+			var tableSeparatorRow = notesTable.insertRow();
+			var tableSeparatorCell = tableSeparatorRow.insertCell();
+			tableSeparatorCell.colSpan = "2";
+			tableSeparatorCell.className = "notesTable-blackSeparator";
+			/* add responder row */
+			var respIDRow = notesTable.insertRow();
+			var respIDLeftCell = respIDRow.insertCell();
+			respIDLeftCell.className = "notesTable-leftColumnResponder"; 
+			respIDLeftCell.innerHTML = "Resp. ID:";
+			var respIDRightCell = respIDRow.insertCell();
+			respIDRightCell.innerHTML = responderID;
+			/* add type row */
+			var typeRow = notesTable.insertRow();
+			var typeLeftCell = typeRow.insertCell();
+			typeLeftCell.className = "notesTable-leftColumnTypeAndBodyPart";
+			typeLeftCell.innerHTML = "Type:";
+			var typeRightCell = typeRow.insertCell();
+			typeRightCell.innerHTML = noteType;
+			/* add body part row */
+			var bodyPartRow = notesTable.insertRow();
+			var bodyPartRightCell = bodyPartRow.insertCell();
+			bodyPartRightCell.className = "notesTable-leftColumnTypeAndBodyPart";
+			bodyPartRightCell.innerHTML = "Body part:";
+			var bodyPartLeftCell = bodyPartRow.insertCell();
+			bodyPartLeftCell.innerHTML = noteLocation;
+			/* add note row (header) */
+			var noteHeaderRow = notesTable.insertRow();
+			var noteHeaderCell = noteHeaderRow.insertCell();
+			noteHeaderCell.colSpan = "2";
+			noteHeaderCell.className = "notesTable-noteRowHeader";
+			noteHeaderCell.innerHTML = "Note:";
+		 	/* add actuall note */
+		 	var noteRow = notesTable.insertRow();
+		 	var noteCell = noteRow.insertCell();
+		 	noteCell.colSpan = "2";
+		 	if (noteType === "TEXT") {
+		 	 	noteCell.innerHTML = note;
+		 	}
+			else if (noteType === "IMAGE") {
+				noteCell.innerHTML = "<img alt=\"\" width=\"160\" height=\"160\" src=\"data:image/png;base64," + note + "\"/>";
+			}
+		 	/* add one more separator at the end */
+		 	var tableSeparatorRow2 = notesTable.insertRow();
+			var tableSeparatorCell2 = tableSeparatorRow2.insertCell();
+			tableSeparatorCell2.colSpan = "2";
+			tableSeparatorCell2.className = "notesTable-blackSeparator";
+		}
+
+		function setNotesToNA() {
+			var rowCount = notesTable.rows.length;
+			while(--rowCount)
+				notesTable.deleteRow(rowCount);
+			/* add one "N/A" row */
+			var tableSeparatorRow = notesTable.insertRow();
+			var tableSeparatorCell = tableSeparatorRow.insertCell();
+			tableSeparatorCell.colSpan = "2";
+			tableSeparatorCell.className = "notesTable-tableNoNotesRow";
+			tableSeparatorCell.innerHTML = "N/A";
+		}
+
+		function removeAllNotes() {
+			var rowCount = notesTable.rows.length;
+			while(--rowCount)
+				notesTable.deleteRow(rowCount);
+			/* add one "N/A" row */
+			var tableSeparatorRow = notesTable.insertRow();
+			var tableSeparatorCell = tableSeparatorRow.insertCell();
+			tableSeparatorCell.colSpan = "2";
+			tableSeparatorCell.className = "notesTable-blackSeparator";
+		}
+	</script>
+
+	<body>
+		<div id="patientList" style="width:600px; height:130px;">
+			<ul id="list">	
+			</ul>
+		</div>
+
+		<div id="patientScreen" class="inner">
+			<!-- <div class="patientLeftScreen" style="background-image: url(tag_original.png); background-size: 100% 100%, auto;"></div> -->
+			<div class="patientLeftScreen"> 
+				<table class="notesTable" id="notesTable">
+					<tr>
+						<th class="notesTable-tableHeader" colspan="2">Notes</th>
+					</tr>
+					<tr>
+						<td class="notesTable-tableNoNotesRow" colspan="2">N/A</td>
+					</tr>
+				</table>
+			</div>
+			<div class="patientMiddleScreen">
+				<table class="tgs" cellpadding="0" cellspacing="0">
+				  <tr>
+				    <td style="height:35%;">
+						Patient name: <span style="float:right;">Age: </span><br>
+				    	<b id="patientName">N/A</b><span style="float:right;"><b id="patientAge">N/A</b></span><br>
+				    	NBC: <span style="float:right;">Sex: </span><br>
+				    	<b id="patientNBC">N/A</b><span style="float:right;"><b id="patientSex">N/A</b></span>
+				    </td> 
+				  </tr>
+				  <tr>
+				    <td style="height:20%;">
+				    	Wound state: <div id="patientWoundStateDiv" style="float:right;width:140px;height:25px;background-color:#C0C0C0"></div>
+				    </td>
+				  </tr>
+				  <tr>
+				    <td style="height:20%;">Status: <span style="float:right;"><b id="patientStatus">N/A</b></span></td>
+				  </tr>
+				  
+				</table>
+			</div>
+			<div class="paitentRightScreen">
+				<table class="tg" >
+				  <tr>
+				    <th class="tg-uce2" colspan="2">Vitals</th>
+				  </tr>
+				  <tr>
+				    <td class="tg-image"><img src="pic_Temperature.png"></td>
+				    <td id="patientTemperature" class="tg-text">N/A</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-image"><img src="pic_spO2.png"></td>
+				    <td id="patientSpO2" class="tg-text">N/A</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-image"><img src="pic_HeartRate.png"></td>
+				    <td id="patientHeartRate" class="tg-text">N/A</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-image-borderTop"><img src="pic_bloodPressure.png"></td>
+				    <td id="patientBloodPressureSYS" class="tg-text-bordderTop">N/A</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-image"><img src="pic_bloodPressure.png"></td>
+				    <td id="patientBloodPressureDIA" class="tg-text">N/A</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-image-borderTop"><img src="pic_RespirationRate.png"></td>
+				    <td id="patientRespirationRate" class="tg-text-bordderTop">N/A</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-image"><img src="pic_pain.png"></td>
+				    <td id="patientPainLevel" class="tg-text">N/A</td>
+				  </tr>
+				</table>
+			</div>
+		</div>
+
+		<script>
+			startHTTPClient();
+		</script>
+
+	</body>
+
+
+
+
+</html>

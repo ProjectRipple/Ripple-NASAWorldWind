@@ -1,0 +1,74 @@
+html{
+	
+}
+body{
+	height: 350px;
+	width: 600px;
+}
+.button {
+	width: 115px;
+	height: 25px;
+	background: #4E9CAF;
+	padding: 10px;
+	text-align: center;
+	margin-top: 400px;
+	text-decoration: none;
+	border-radius: 5px;
+	color: white;
+	font-weight: bold;
+}
+.button:hover{
+	background: #091315;
+}
+#zoomOutButton {
+	width: 115px;
+	margin-top: 12px;
+	float: right;
+	text-align: right;
+}
+#temp{
+	padding-top: 10px;
+}
+#titlePage{
+	padding: 15px;
+}
+#graph, #hrGraph, #rrGraph, #bpGraph, #ecgGraph{
+	padding: 15px;
+}
+table,th,td
+{
+font-size: 16px;
+font-weight: bold;
+border-collapse:collapse;
+}
+th
+{
+padding:2px;
+    color:#f;
+    text-shadow:1px 1px 1px #568F23;
+    border:1px solid #4E9CAF;
+    border-bottom:3px solid #4E9CAF;
+    background-color:#4E9CAF;
+    background:-webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.02, rgb(54,124,142)),
+        color-stop(0.51, rgb(78,156,175)),
+        color-stop(0.87, rgb(100,172,211))
+        );
+}
+.tdbody
+{
+	text-align:center;
+	padding:5px;
+	border:1px solid #4E9CAF;
+	background:-webkit-gradient(
+        linear,
+        left bottom,
+        right top,
+        color-stop(0.02, rgb(182,255,145)),
+        color-stop(0.51, rgb(191,222,175)),
+        color-stop(0.87, rgb(179,196,171))
+        );
+}

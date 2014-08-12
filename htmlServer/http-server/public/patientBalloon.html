@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+
+<!-- This html file represents a web page that will be used to display patients 
+information (heart rate, ecg, temperature, location, etc) in NASA World Wind. 
+In order to make the web page display the information correctly, the URL used 
+to open this file must contain arguments (id, lat, and long) that define 
+patient ID, and his/her location (latitude and longitude).
+To update the web page a WebSocket, that listens on ws://127.0.0.1:8080/ address,
+is used. WebSocket listens to Ripple-Cloud XML messages and parses them 
+to update patient's information. -->
+
+<html>
+  <head>
+  	<!-- IE10 is the first version of IE that supports WebSockets -->
+  	<meta http-equiv="X-UA-Compatible" content="IE=10">
+    <title>NASA World Wind page</title>
+
+    <!-- dypgraph-combined.js is responsible for rendering graphs. More at http://dygraphs.com/ -->
+    <script type="text/javascript" src="dygraph-combined.js">/</script>
+
+    <!-- This script controls which div is shown on the screen (only one can be visible, 
+    the rest must be hidden). Div names are self-explanatory -->
+	<script>
+		function show(shown, hidden1, hidden2, hidden3, hidden4, hidden5) {
+		  if (shown == "graph") {
+		    var tempGraph = showG();
+			
+			document.getElementById("zoomOutButton").style.display='block';
+		  }
+		  if (shown == "hrGraph") {
+			var hrGraph = showHRGraph();
+			
+			document.getElementById("zoomOutButton").style.display='block';
+		  }
+		  if (shown == "rrGraph") {
+			var rrGraph = showRRGraph();
+			
+			document.getElementById("zoomOutButton").style.display='block';
+		  }
+		  if (shown == "bpGraph") {
+			var bpGraph = showBPGraph();
+			
+			document.getElementById("zoomOutButton").style.display='block';
+		  }
+		  if (shown == "ecgGraph") {
+			var ecgGraph = showECGGraph();
+			
+			document.getElementById("zoomOutButton").style.display='block';
+		  }
+		  if  (shown == "titlePage"){
+			document.getElementById("zoomOutButton").style.display='none';
+			
+		  }
+		  document.getElementById(shown).style.display='block';
+		  document.getElementById(hidden1).style.display='none';
+		  document.getElementById(hidden2).style.display='none';
+		  document.getElementById(hidden3).style.display='none';
+		  document.getElementById(hidden4).style.display='none';
+		  document.getElementById(hidden5).style.display='none';
+		  return false;
+		}
+	</script>
+
+	<!-- This script creates and load graphs into their respective divs. It can also update 
+	graphs data. -->
+	<script>
+		var heartRate_graph = null;
+		var respirationRate_graph = null;
+		var temperature_graph = null;
+		var bloodPressure_graph = null;
+		var ecg_graph = null;
+
+		var heartRate_data = [];
+		var respirationRate_data = [];
+		var bloodPressure_data = [];
+		var temperature_data = [];
+		var ecg_data = [];
+
+		/* This function initlizes all the graphs available in the patient's balloon.
+		   Loading graphs on-demand (when user decides to disaply the graph) may take
+		   a long time. Calling this function ensures that all the graphs are created
+		   ahead of time. */
+		function initializeGraphs() {
+			showG();
+			showHRGraph();
+			showRRGraph();
+			showBPGraph();
+			showECGGraph();
+		}
+
+		/* Creates temperature graph (if the graph already exists, the function does
+		   nothing, and returns already existing graph. */
+		function showG() {
+			if (temperature_graph !== null) {
+				return temperature_graph;
+			}
+			/* removeFirst - ugly work around to create an empty graph (a graph with no 
+			   data attached will not be created). */
+			var removeFirst = false;
+			if (!(typeof temperature_data !== 'undefined' && temperature_data.length > 0)) {
+				temperature_data.push([0,[0,0,0]]);
+				removeFirst = true;
+			}
+			temperature_graph = new Dygraph(document.getElementById('graph'), temperature_data,
+				{
+				width: 600,
+				height: 300,
+				labelsDivStyles: { border: '1px solid black' },
+				title: 'Sample temperature graph',
+				xlabel: 'Time',
+				customBars: true,
+				valueRange: [30,110],
+				colors: ["rgb(255,0,0)"],
+				ylabel: 'Temperature (F)'
+				});		
+			if (removeFirst) {
+				temperature_data.splice(0,1);
+			}
+			
+			return temperature_graph;
+		}
+
+		/* Creates heart rate graph (if the graph already exists, the function does
+		   nothing, and returns already existing graph. */
+		function showHRGraph() {
+			if (heartRate_graph !== null) {
+				return heartRate_graph;
+			}	
+			/* removeFirst - ugly work around to create an empty graph (a graph with no 
+			   data attached will not be created). */
+			var removeFirst = false;
+			if (!(typeof heartRate_data !== 'undefined' && heartRate_data.length > 0)) {
+				heartRate_data.push([0,[0,0,0]]);
+				removeFirst = true;
+			}
+			heartRate_graph = new Dygraph(document.getElementById('hrGraph'), heartRate_data,
+				{
+				width: 600,
+				height: 300,
+				labelsDivStyles: { border: '1px solid black' },
+				title: 'Sample HR graph',
+				xlabel: 'Time',
+				customBars: true,
+				valueRange: [0,230],
+				colors: ["rgb(255,0,0)"],
+				ylabel: 'Heart Rate (beats/min)'
+				});		
+			if (removeFirst) {
+				heartRate_data.splice(0,1);
+			}
+			
+			return heartRate_graph;
+		}
+
+		/* Creates respiration rate graph (if the graph already exists, the function does
+		   nothing, and returns already existing graph. */
+		function showRRGraph() {
+			if (respirationRate_graph !== null) {
+				return respirationRate_graph;
+			}	
+			/* removeFirst - ugly work around to create an empty graph (a graph with no 
+			   data attached will not be created). */
+			var removeFirst = false;
+			if (!(typeof respirationRate_data !== 'undefined' && respirationRate_data.length > 0)) {
+				respirationRate_data.push([0,[0,0,0]]);
+				removeFirst = true;
+			}
+			respirationRate_graph = new Dygraph(document.getElementById('rrGraph'), respirationRate_data,
+				{
+				width: 600,
+				height: 300,
+				labelsDivStyles: { border: '1px solid black' },
+				title: 'Sample RR graph',
+				xlabel: 'Time',
+				customBars: true,
+				valueRange: [0,50],
+				colors: ["rgb(255,0,0)"],
+				ylabel: 'Respiration Rate (breaths/min)'
+				});		
+			if (removeFirst) {
+				respirationRate_data.splice(0,1);
+			}
+			return respirationRate_graph;
+		}
+
+		/* Creates blood pressure graph (if the graph already exists, the function does
+		   nothing, and returns already existing graph. */
+		function showBPGraph() {
+			if (bloodPressure_graph !== null) {
+				return bloodPressure_graph;
+				removeFirst = true;
+			}	
+			/* removeFirst - ugly work around to create an empty graph (a graph with no 
+			   data attached will not be created). */
+			var removeFirst = false;
+			if (!(typeof bloodPressure_data !== 'undefined' && bloodPressure_data.length > 0)) {
+				bloodPressure_data.push([0,[0,0,0],[0,0,0]]);
+				removeFirst = true;
+			}
+			bloodPressure_graph = new Dygraph(document.getElementById('bpGraph'), bloodPressure_data,
+				{
+				width: 600,
+				height: 300,
+				labelsDivStyles: { border: '1px solid black' },
+				title: 'Sample BP graph',
+				xlabel: 'Time',
+				customBars: true,
+				valueRange: [0,240],
+				colors: ["rgb(255,0,0)","rgb(0,0,255)"],
+				ylabel: 'Blood pressure'
+				});		
+			if (removeFirst) {
+				bloodPressure_data.splice(0,1);	
+			}
+			return bloodPressure_graph;
+		}
+
+		/* Creates ECG graph (if the graph already exists, the function does
+		   nothing, and returns already existing graph. */
+		function showECGGraph() {
+			if (ecg_graph !== null) {
+				return ecg_graph;
+			}
+			/* removeFirst - ugly work around to create an empty graph (a graph with no 
+			   data attached will not be created). */
+			var removeFirst = false;
+			if (!(typeof ecg_data !== 'undefined' && ecg_data.length > 0)) {
+				ecg_data.push([0,0]);
+				removeFirst = true;
+			}
+			ecg_graph = new Dygraph(document.getElementById('ecgGraph'), ecg_data,
+				{
+				width: 600,
+				height: 300,
+				labelsDivStyles: { border: '1px solid black' },
+				title: 'Sample ECG graph',
+				xlabel: 'Time',
+				valueRange: [-1,4],
+				colors: ["rgb(255,0,0)"],
+				ylabel: 'ECG data'
+				});		
+			if (removeFirst) {
+				ecg_data.splice(0,1);
+			}
+			return ecg_graph;
+		}
+
+		/* Resets the zoom of all existing graphs. */
+		function zoomOutG() {
+			if (heartRate_graph !== null) {
+				heartRate_graph.resetZoom();
+			}
+			if (respirationRate_graph !== null) {
+				respirationRate_graph.resetZoom();
+			}
+			if (temperature_graph !== null) {
+				temperature_graph.resetZoom();
+			}
+			if (bloodPressure_graph !== null) {
+				bloodPressure_graph.resetZoom();
+			}
+			if (ecg_graph !== null) {
+				ecg_graph.resetZoom();
+			}
+			
+		}
+
+		/* Pushes new data on the heart rate graph and invalidates the graph.
+		   time - y axis value
+		   value - heart rate value
+		   range - may possibly include uncertainty of measurment, otherwise it
+		           can be set to 0, or any other reasonable value to make the graph
+		           look pretty. */
+		function updateHeartRate_data(time, value, range) {
+			heartRate_data.push([time, [(value - range), value, (value + range)]]);
+			if (heartRate_graph !== null) {
+				heartRate_graph.updateOptions( { 'file': heartRate_data } );
+			}
+		}
+			
+		/* Pushes new data on the heart rate graph and invalidates the graph.
+		   time - y axis value
+		   value - heart rate value
+		   range - may possibly include uncertainty of measurment, otherwise it
+		           can be set to 0, or any other reasonable value to make the graph
+		           look pretty. */
+		function updateRespirationRate_data(time, value, range) {
+			respirationRate_data.push([time, [value - range, value, value + range]]);
+			if (respirationRate_graph !== null) {
+				respirationRate_graph.updateOptions( { 'file': respirationRate_data } );
+			}
+		}
+			
+		/* Pushes new data on the blood pressure graph and invalidates the graph.
+		   time - y axis value
+		   value1 -  systolic value
+		   value2 - diastolic value. */
+		function updateBloodPressure_data(time, value1, value2) {
+			bloodPressure_data.push([time, [0, value1, value1 + 10], [0, value2, value2 + 10]]);
+			if (bloodPressure_graph !== null) {
+				bloodPressure_graph.updateOptions( { 'file': bloodPressure_data } );
+			}
+		}
+			
+		/* Pushes new data on the temperature graph and invalidates the graph.
+		   time - y axis value
+		   value - temperature value
+		   range - may possibly include uncertainty of measurment, otherwise it
+		           can be set to 0, or any other reasonable value to make the graph
+		           look pretty. */
+		function updateTemperature_data(time, value, range) {
+			temperature_data.push([time, [value - range, value, value + range]]);
+			if (temperature_graph !== null) {
+				temperature_graph.updateOptions( { 'file': temperature_data } );
+			}
+		}
+			
+		/* Pushes new data on the ecg graph and invalidates the graph.
+		   time - y axis value (passing the actual time is not recommended. Rather
+		          use 1 for value1, 2 for value2, etc.
+		   value - ecg reading. */
+		function updateEcg_data(time, value) {
+			ecg_data.push([time, value]);
+			if (ecg_graph !== null) {
+				ecg_graph.updateOptions( { 'file': ecg_data } );
+			}
+		}
+	</script>
+
+	<!-- Google Maps script  -->
+	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp">/</script>
+	<script>
+		var map;
+		function initialize() {
+		  var mapOptions = {
+		    zoom: 12,
+		    center: new google.maps.LatLng(lat, _long)
+		  };
+		  map = new google.maps.Map(document.getElementById('googleMaps'),
+		      mapOptions);
+		}
+		google.maps.event.addDomListener(window, 'load', initialize);
+	</script>
+	<!-- End of Google Maps script -->
+
+	<!-- This set of functions is responsible for communication between NASA World Wind and 
+	the balloon itself, and setting the setting the id of the patient that will
+	be displayed in this balloon, as well as parsing the HTML arguments passed in the URL -->
+	<script>
+		/* Returns value of the URL argument. 
+		   name - name of the URL argument. */
+		function getArgValue(name) {
+			name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+			var regexS = "[\\?&]"+name+"=([^&#]*)";
+			var regex = new RegExp( regexS );
+			var results = regex.exec( window.location.href );
+			 if( results == null )
+			  	return null;
+			 else
+			   	return results[1];
+		}
+
+		var id = ""; 
+		var lat = "";
+		var _long = "";
+
+		/* Parses all the arguments (id, latitude, and longitude) from the URL */
+		function processURLArgs() {
+			id = getArgValue("id");
+			lat = getArgValue("lat");
+			_long = getArgValue("long");
+		}
+
+		/* Creates and start WebSocket that will listen on port 8080 for patient's
+		   information updates. */
+		function startHttpClient() {
+			/* read in arguments from the URL */
+			processURLArgs();
+			/* initialize Google Maps */
+			initialize();
+
+			/* creates and start the WebSocket */
+			try {
+				var ws = new WebSocket("ws://127.0.0.1:8080/");
+			} catch (e) {
+				alert("Coudn't open WebSocket");
+			}
+
+			window.onunload = function() {s
+				ws.close();
+			}
+
+			window.onbeforeunload = function(){
+				ws.close();
+				return " ";		
+			}
+
+			ws.onopen = function() {
+			 
+			};
+			
+			/* This function is called when a message is received by the WebSocket. */
+			ws.onmessage = function (evt) {
+				/* first, check if the message is an ordinary ping message (to keep the
+				   connection between this WebSocket, and the server alive) */
+				if (evt.data.substring(0,4) == "ping") {
+					ws.send("pong");
+				}
+				
+				/* create an XML parser */
+				xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+				/* TODO: implement async XML processing */
+				xmlDoc.async = false;
+				/* load XML file into parser */
+				xmlDoc.loadXML(evt.data);
+
+				/* get patient id, if there is no match between the id in the message and
+				   id passed in the URL disregard the message */
+				msgId = xmlDoc.getElementsByTagName("id")[0].childNodes[0].nodeValue;
+				if (msgId !== id) {
+					return;
+				}
+
+				/* get all the feed items from the XML message */
+				itemList = xmlDoc.getElementsByTagName("Item");
+
+				/* for each of the feed item, update appropriate part of the web page */
+				for (i = 0; i < itemList.length; i++) {
+					attribute = itemList[i].attributes.getNamedItem("type").nodeValue;
+					if (attribute == "heartRate") {
+						value = itemList[i].getElementsByTagName("value")[0].childNodes[0].nodeValue;
+						unit = itemList[i].attributes.getNamedItem("unit").nodeValue;
+						document.getElementById("heartRate_current").innerHTML = value;
+						document.getElementById("heartRate_unit").innerHTML = unit;
+						updateHeartRate_data(new Date(), parseFloat(value), parseFloat("5.0"));
+						
+					}
+					else if (attribute == "temperature") {
+						value = itemList[i].getElementsByTagName("value")[0].childNodes[0].nodeValue;
+						unit = itemList[i].attributes.getNamedItem("unit").nodeValue;
+						document.getElementById("temperature_current").innerHTML = value;
+						document.getElementById("temperature_unit").innerHTML = unit;
+						updateTemperature_data(new Date(), parseFloat(value), parseFloat("5.0"));
+						
+					}
+					else if (attribute == "respirationRate") {
+						value = itemList[i].getElementsByTagName("value")[0].childNodes[0].nodeValue;
+						unit = itemList[i].attributes.getNamedItem("unit").nodeValue;
+						document.getElementById("respirationRate_current").innerHTML = value;
+						document.getElementById("respirationRate_unit").innerHTML = unit;
+						updateRespirationRate_data(new Date(), parseFloat(value), parseFloat("5.0"));
+					}
+					else if (attribute == "bloodPressure") {
+						value1 = itemList[i].getElementsByTagName("value")[0].childNodes[0].nodeValue;
+						value2 = itemList[i].getElementsByTagName("value")[1].childNodes[0].nodeValue;
+						unit = itemList[i].attributes.getNamedItem("unit").nodeValue;
+						document.getElementById("bloodPressure_current").innerHTML = value1 + "/" + value2;
+						document.getElementById("bloodPressure_unit").innerHTML = unit;
+						updateBloodPressure_data(new Date(), parseFloat(value1), parseFloat(value2));
+					}
+					else if (attribute == "ecg") {
+						values = itemList[i].getElementsByTagName("value");
+						index = ecg_data.length;
+						for (j = 0; j < values.length; j++) {
+							value = values[j].childNodes[0].nodeValue;
+							updateEcg_data(index + j, parseFloat(value));
+						}
+					}
+					else if (attribute == "saturationO2") {
+						value = itemList[i].getElementsByTagName("value")[0].childNodes[0].nodeValue;
+						unit = itemList[i].attributes.getNamedItem("unit").nodeValue;
+						document.getElementById("saturationO2_current").innerHTML = value;
+						document.getElementById("saturationO2_unit").innerHTML = unit;
+						/* TODO: add saturation graph */
+					}
+					else if (attribute == "firstName") {
+						value = itemList[i].getElementsByTagName("value")[0].childNodes[0].nodeValue;
+						document.getElementById("patientsFirstName").innerHTML = value;
+					}	
+					else if (attribute == "lastName") {
+						value = itemList[i].getElementsByTagName("value")[0].childNodes[0].nodeValue;
+						document.getElementById("patientsLastName").innerHTML = value;
+					}
+					else if (attribute == "age") {
+						value = itemList[i].getElementsByTagName("value")[0].childNodes[0].nodeValue;
+						document.getElementById("patientsAge").innerHTML = value;
+					}					
+				}
+			};
+			
+			/* called when the WebSocket closes - as long as the web page is alive, the WebSocket should 
+			   be alive as well, so:
+			   TODO: rec-reate the WebSocket, if for some reasone it closes */
+			ws.onclose = function() {
+			    ws = new WebSocket("ws://127.0.0.1:8080/");
+			};
+			
+			/* TODO: attempt to re-create the WebSocket */
+			ws.onerror = function(err) {
+
+			};
+		}
+	</script>
+
+<link rel="stylesheet" type="text/css" href="patientBalloon.css">
+
+  </head>
+  <body>
+
+	<div id="zoomOutButton" style="display:none">
+		<a  class='button' onclick="zoomOutG();">Zoom out</a>
+	</div>
+	
+	<div id="titlePage" style="width:600px; height:300px;" ;>
+		<div id="patientsInfo" style="margin-left:10px;margin-bottom:5px;width:300px;height:40px;float:left;border-radius:10px;border:10px solid #4E9CAF;">
+				<b>Patient's name: </b>
+				<span style="float:right;margin-right:10px;">
+				<b id="patientsLastName">N/A</b>
+				<b>, </b>
+				<b id="patientsFirstName">N/A</b>
+				</span>			
+				<br>
+				<b>Patient's age: </b>
+				<span style="float:right;margin-right:10px;">
+				<b id="patientsAge">N/A</b>
+		</div>
+	
+		<div id="googleMaps" style="width:250px; height:310px;float:right;" ;>
+			<script>
+				initialize();
+			</script>
+		</div>
+	
+		<div id="stats" style="width:350px;height:250px;float:left;overflow-y:scroll;";>
+		<table style="width:333px;height=250px">
+		<tr>
+			<th>Vital Sign</th>
+			<th>Current</th>
+			<th>Unit</th>
+			<th>Status</th>
+		</tr>
+		<tr>
+			<td align="center"><img alt="" width="40" height="40" src="pic_heartRate.png" /></td>
+			<td align="center" id="heartRate_current">N/A</td>
+			<td align="center" id="heartRate_unit">N/A</td>
+			<td bgcolor="green"></td>
+		</tr>
+		<tr>
+			<td align="center"><img alt="" width="40" height="40" src="pic_respirationRate.png" /></td>
+			<td align="center" id="respirationRate_current">N/A</td>
+			<td align="center" id="respirationRate_unit">N/A</td>
+			<td bgcolor="orange"></td>
+		</tr>
+		<tr>
+			<td align="center"><img alt="" width="40" height="40" src="pic_bloodPressure.png" /></td>
+			<td align="center" id="bloodPressure_current">N/A</td>
+			<td align="center" id="bloodPressure_unit">N/A</td>
+			<td bgcolor="green"></td>
+		</tr>
+		<tr>
+			<td align="center"><img alt="" width="40" height="40" src="pic_Temperature.png" /></td>
+			<td align="center" id="temperature_current">N/A</td>
+			<td align="center" id="temperature_unit">N/A</td>
+			<td bgcolor="red"></td>
+		</tr>
+		<tr>
+			<td align="center"><img alt="" width="40" height="40" src="pic_spO2.png" /></td>
+			<td align="center" id="saturationO2_current">N/A</td>
+			<td align="center" id="saturationO2_unit">N/A</td>
+			<td bgcolor="green"></td>
+		</tr>
+	</table>
+		
+		</div>
+
+	</div>
+	
+    <div id="graph" style="display:none">
+		
+	</div>
+	
+	<div id="hrGraph" style="display:none">
+	
+	</div>
+	
+	<div id="rrGraph" style="display:none">
+	
+	</div>
+	
+	<div id="bpGraph" style="display:none">
+	
+	</div>
+	
+	<div id="ecgGraph" style="display:none">
+	
+	</div>
+	
+	<div id="temp">
+		<a class="button" href="#" onclick="return show('titlePage','graph', 'hrGraph', 'rrGraph','bpGraph', 'ecgGraph');">Home</a>
+		<a class="button" href="#" onclick="return show('hrGraph','graph', 'titlePage','rrGraph','bpGraph', 'ecgGraph');">HR Graph</a>
+		<a class="button" href="#" onclick="return show('rrGraph','graph', 'titlePage', 'hrGraph','bpGraph', 'ecgGraph');">RR Graph</a>
+		<a class="button" href="#" onclick="return show('graph','titlePage', 'hrGraph', 'rrGraph','bpGraph', 'ecgGraph');">Temp. Graph</a>
+		<a class="button" href="#" onclick="return show('bpGraph','titlePage', 'hrGraph', 'rrGraph','graph', 'ecgGraph');">BP Graph</a>
+		<a class="button" href="#" onclick="return show('ecgGraph','titlePage', 'hrGraph', 'rrGraph','graph','bpGraph');">ECG Graph</a>
+	</div>
+	
+	<script>
+		startHttpClient();
+	</script>
+	
+  </body>
+</html>
