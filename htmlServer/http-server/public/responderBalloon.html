@@ -19,6 +19,7 @@
 	function sendPatientInfoRequest(patientID) {
 		if (tmp == 0) {
 			if (patientID === '') {
+				tmp = 1;
 				return;
 			}
 			ws.send(id + "-" + patientID);
@@ -64,6 +65,15 @@
 			alert(err);
 		}
 
+		window.onunload = function() {
+			ws.close();
+		}
+
+		window.onbeforeunload = function(){
+			ws.close();
+			return " ";		
+		}
+
 		ws.onopen = function() {
 			
 		};
@@ -94,7 +104,7 @@
 			/* "patientData" contains all data about the patient that can be displayed
 			    in the responder balloon */
 			if (evt.data.substring(0,11) == "patientData") {
-				var patientMsg = evt.data.substring(11,evt.data.length).split(' ');
+				var patientMsg = evt.data.substring(11,evt.data.length).split('~');
 				var patientID;
 				if (patientMsg[0] === 'ID') {
 					patientID = patientMsg[1];

@@ -21,7 +21,7 @@ import org.eclipse.jetty.websocket.WebSocketHandler;
  */
 public class PatientBalloonNotifier {
 	protected final String TAG = "PatientBalloonNotifier: ";
-	protected final boolean DEBUG = true;
+	protected final boolean DEBUG = false;
 	
 	private Server server;
 	private PatientBalloonSocketHandler balloonSocketHandler;

@@ -204,19 +204,14 @@ public class ResponderNotes extends JPanel {
 	}
 	
 	public void addNotes(ArrayList<Note> notes) {
-		System.out.println("Adding notes");
 		if (notes.equals(this.notes)) {
-			System.out.println("Or maybe not");
 			return;
 		}
 		for (Note note : notes) {
-			System.out.println("Looking for one that's not here");
 			if (this.notes.contains(note)) {
-				System.out.println("\tnext please");
 				continue;
 			}
 			addNote(note);
-			System.out.println("\tyep, adding");
 		}
 	}
 	

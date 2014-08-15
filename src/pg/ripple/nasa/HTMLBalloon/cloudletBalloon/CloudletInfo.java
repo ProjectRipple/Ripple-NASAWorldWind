@@ -424,6 +424,7 @@ public final class CloudletInfo {
 				break;
 			case NOTE_TEXT_GENERAL:
 				for (String s : fi.getValues()) {
+					System.out.println("HERE: " + s);
 					addPatientNote(responderId, patient, Note.NoteType.TEXT, Note.NoteLocation.GENERAL, s);
 				}
 				break;

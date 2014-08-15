@@ -443,31 +443,31 @@ public final class Patient {
 			StringBuilder msgBuilder = new StringBuilder();
 			msgBuilder
 					.append("patientData")
-					.append("ID ")
-					.append(getId() + " ")
-					.append("NAME ")
+					.append("ID~")
+					.append(getId() + "~")
+					.append("NAME~")
 					.append(getLastName() + ","
-							+ getFirstName() + " ").append("AGE ")
-					.append(getAge() + " ").append("NBC ")
-					.append(getNBCStatus() + " ").append("SEX ")
-					.append(getSex() + " ").append("WOUNDSTATE ")
-					.append(getWoundState() + " ").append("STATUS ")
-					.append(getStatus() + " ").append("TEMPERATURE ")
-					.append(getTemperature() + " ").append("SPO2 ")
-					.append(getSpO2() + " ").append("HEARTRATE ")
-					.append(getHeartRate() + " ")
-					.append("BLOODPR_DIA ")
-					.append(getBloodPressure_DIS() + " ")
-					.append("BLOODPR_SYS ")
-					.append(getBloodPressure_SYS() + " ")
-					.append("RESPIRATION ")
-					.append(getRespirationRate() + " ").append("PAIN ")
-					.append(getPainLevel() + " ");
+							+ getFirstName() + "~").append("AGE~")
+					.append(getAge() + "~").append("NBC~")
+					.append(getNBCStatus() + "~").append("SEX~")
+					.append(getSex() + "~").append("WOUNDSTATE~")
+					.append(getWoundState() + "~").append("STATUS~")
+					.append(getStatus() + "~").append("TEMPERATURE~")
+					.append(getTemperature() + "~").append("SPO2~")
+					.append(getSpO2() + "~").append("HEARTRATE~")
+					.append(getHeartRate() + "~")
+					.append("BLOODPR_DIA~")
+					.append(getBloodPressure_DIS() + "~")
+					.append("BLOODPR_SYS~")
+					.append(getBloodPressure_SYS() + "~")
+					.append("RESPIRATION~")
+					.append(getRespirationRate() + "~").append("PAIN~")
+					.append(getPainLevel() + "~");
 			for (Note note : getNotes()) {
-				msgBuilder.append("NOTE ").append(
-						note.getResponderID() + " " + note.getNoteType() + " "
-								+ note.getNoteLocation() + " "
-								+ note.getNoteContent() + " ");
+				msgBuilder.append("NOTE~").append(
+						note.getResponderID() + "~" + note.getNoteType() + "~"
+								+ note.getNoteLocation() + "~"
+								+ note.getNoteContent() + "~");
 
 			}
 			return msgBuilder.toString();

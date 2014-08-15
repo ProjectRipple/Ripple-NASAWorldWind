@@ -22,7 +22,7 @@ import org.eclipse.jetty.websocket.WebSocketHandler;
  */
 public class CloudletBalloonNotifier {
 	protected final String TAG = "CloudletBalloonNotifier: ";
-	protected final boolean DEBUG = true;
+	protected final boolean DEBUG = false;
 
 	private Server server;
 	private CloudletBalloonSocketHandler balloonSocketHandler;
