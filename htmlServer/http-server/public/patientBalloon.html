@@ -379,7 +379,13 @@ to update patient's information. -->
 			/* read in arguments from the URL */
 			processURLArgs();
 			/* initialize Google Maps */
-			initialize();
+			try {
+				/* catch exceptions from maps init so that websocket will 
+				   still open even on maps error */
+				initialize();
+			} catch (e) {
+				window.console.error('Failed to initialize google maps.');
+			}
 			/* creates and start the WebSocket */
 			try {
 				var ws = new WebSocket("ws://127.0.0.1:8080/");
@@ -406,8 +412,8 @@ to update patient's information. -->
 				   connection between this WebSocket, and the server alive) */
 				if (evt.data.substring(0,4) == "ping") {
 					ws.send("pong");
+					return;
 				}
-				
 				/* create an XML parser */
 				xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
 				/* TODO: implement async XML processing */
@@ -512,7 +518,7 @@ to update patient's information. -->
 		<a  class='button' onclick="zoomOutG();">Zoom out</a>
 	</div>
 	
-	<div id="titlePage" style="width:600px; height:300px;" ;>
+	<div id="titlePage" style="width:600px; height:300px;" >
 		<div id="patientsInfo" style="margin-left:10px;margin-bottom:5px;width:300px;height:40px;float:left;border-radius:10px;border:10px solid #4E9CAF;">
 				<b>Patient's name: </b>
 				<span style="float:right;margin-right:10px;">
@@ -524,15 +530,16 @@ to update patient's information. -->
 				<b>Patient's age: </b>
 				<span style="float:right;margin-right:10px;">
 				<b id="patientsAge">N/A</b>
+				</span>
 		</div>
 		 
-		<div id="googleMaps" style="width:250px; height:310px;float:right;" ;>
+		<div id="googleMaps" style="width:250px; height:310px;float:right;" >
 			<script>
 				initialize();
 			</script>
 		</div>
 		
-		<div id="stats" style="width:350px;height:250px;float:left;overflow-y:scroll;";>
+		<div id="stats" style="width:350px;height:250px;float:left;overflow-y:scroll;">
 		<table style="width:333px;height=250px">
 		<tr>
 			<th>Vital Sign</th>
