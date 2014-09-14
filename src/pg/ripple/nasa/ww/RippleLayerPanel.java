@@ -5,34 +5,46 @@
  */
 package pg.ripple.nasa.ww;
 
-import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.layers.*;
+import gov.nasa.worldwind.layers.Layer;
+import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.render.AbstractBrowserBalloon;
 import gov.nasa.worldwind.render.BalloonAttributes;
-import gov.nasa.worldwind.render.BasicBalloonAttributes;
 import gov.nasa.worldwind.render.GlobeBrowserBalloon;
 
-import javax.swing.*;
-import javax.swing.border.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Arrays;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTabbedPane;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import pg.ripple.nasa.HTMLBalloon.cloudletBalloon.CloudletInfoManager;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.Arrays;
-import java.util.Hashtable;
-
 /**
- * Panel to display a list of layers. A layer can be turned on or off by clicking a check box next to the layer name.
- *
- * @version $Id: LayerPanel.java 1171 2013-02-11 21:45:02Z dcollins $
- *
- * @see LayerTreeUsage
- * @see OnScreenLayerManager
+ * Created based on gov.nasa.worldwindx.examples.LayerPanel. This class is responsible for 
+ * displaying list selected World Wind layers as well as displaying Ripple Layers.
+ * 
+ * @author Pawel
+ * 
  */
 public class RippleLayerPanel extends JPanel
 {
@@ -72,6 +84,11 @@ public class RippleLayerPanel extends JPanel
         	this.makePanel(wwd, size);
     }
 
+    /**
+     * Creates the panel that holds selected World Wind layers.
+     * @param wwd
+     * @param size
+     */
     protected void makePanel(WorldWindow wwd, Dimension size)
     {
         // Make and fill the panel holding the layer titles.
@@ -98,18 +115,27 @@ public class RippleLayerPanel extends JPanel
         this.add(westPanel, BorderLayout.CENTER);
     }
     
+    /**
+     * Creates the panel that holds Ripple layers.
+     * @param wwd
+     * @param size
+     */
     protected void createRipplePanel(WorldWindow wwd, Dimension size) {
+    	// Make and fill the panel holding the layer titles.
     	rippleLayers = new JPanel(new GridLayout(0, 1, 0, 4));
     	rippleLayers.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
     	
+        // Must put the layer grid in a container to prevent scroll panel from stretching their vertical spacing.
     	JPanel dummyPanel = new JPanel(new BorderLayout());
         dummyPanel.add(rippleLayers, BorderLayout.NORTH);
         
+        // Put the name panel in a scroll bar.
     	this.scrollRipplePane = new JScrollPane(dummyPanel);
     	this.scrollRipplePane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
     	if (size != null)
             this.scrollRipplePane.setPreferredSize(size);
     	
+        // Add the scroll bar and name panel to a titled panel that will resize with the main window.
     	if (westRipplePanel == null)
     		westRipplePanel = new JPanel();
     	westRipplePanel.setBorder(new CompoundBorder(BorderFactory.createEmptyBorder(9, 9, 9, 9), new TitledBorder("Ripple layers")));
@@ -118,7 +144,13 @@ public class RippleLayerPanel extends JPanel
     	
     	this.add(westRipplePanel, BorderLayout.SOUTH);
     }
-    
+
+    /**
+     * Adds the layer that holds AbstractBrowserBalloon object to the Ripple layers panel.
+     * @param wwd
+     * @param layer
+     * @param balloon
+     */
     protected void addRippleLayer(WorldWindow wwd, Layer layer, AbstractBrowserBalloon balloon) {
     	String layerName = layer.getName();
     	
@@ -129,6 +161,12 @@ public class RippleLayerPanel extends JPanel
     	this.fillRippleLayer(rippleLayers, wwd, layer, layerName, balloon);
     }
     
+    /**
+     * Removes the layer that holds AbstractBrowserBalloon object from the Ripple layers panel.
+     * @param wwd
+     * @param layer
+     * @param balloon
+     */
     protected void removeRippleLayer(WorldWindow wwd, Layer layerToRemove) {
     	LayerList list = wwd.getModel().getLayers();
     	list.remove(layerToRemove);
@@ -144,6 +182,13 @@ public class RippleLayerPanel extends JPanel
     	}
     }
     
+    /**
+     * Creates the panel that holds selected World Wind layers. 
+     * @param wwd
+     * @param size
+     * @param tabName
+     * @param layersNames
+     */
     protected void addTabbedPanel(WorldWindow wwd, Dimension size, String tabName, String[] layersNames) {
     	// Make and fill the panel holding the layer titles
     	JPanel jp = new JPanel(new GridLayout(0, 1, 0, 4));
